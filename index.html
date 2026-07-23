@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Katy · Home</title>
+
+  <!-- Apply saved theme before first paint to avoid a flash -->
+  <script>
+    try {
+      if (JSON.parse(localStorage.getItem('dashboard.theme')) === 'dark') {
+        document.documentElement.dataset.theme = 'dark';
+      }
+    } catch (e) { /* first run — light is the default */ }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M 78 22 A 40 40 0 1 0 82 55' fill='none' stroke='%23C1502E' stroke-width='9' stroke-linecap='round'/%3E%3C/svg%3E">
+
+  <!-- Google keys live in config.js (git-ignored). Missing file = calendar shows setup hint; everything else works. -->
+  <script src="config.js"></script>
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <svg class="enso" viewBox="0 0 100 100" aria-hidden="true">
+        <path d="M 78 22 A 40 40 0 1 0 82 55" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
+      </svg>
+      <p class="jp-greeting" id="jpGreeting"></p>
+      <h1 class="greeting" id="greeting"></h1>
+      <p class="today-date" id="todayDate"></p>
+      <button id="themeToggle" class="theme-toggle" aria-label="Switch theme" title="Light / dark">◐</button>
+    </header>
+
+    <section class="today-strip" id="todayStrip" aria-label="Urgent today" hidden>
+      <span class="strip-label">Today</span>
+      <ul class="strip-list" id="todayStripList"></ul>
+    </section>
+
+    <main class="layout">
+      <section class="todo-grid" id="todoGrid" aria-label="To-do lists"></section>
+
+      <aside class="rail">
+        <section class="panel" aria-label="Calendar">
+          <div class="panel-head">
+            <h2 class="panel-title">Calendar</h2>
+            <button id="calendarRefresh" class="ghost-btn" aria-label="Refresh calendar" title="Refresh" hidden>↻</button>
+          </div>
+          <div id="calendarBody" class="calendar-body"></div>
+        </section>
+
+        <section class="panel" aria-label="Notes">
+          <h2 class="panel-title">Notes</h2>
+          <textarea id="notes" class="notes" placeholder="Jot something down…" aria-label="Quick notes"></textarea>
+        </section>
+      </aside>
+    </main>
+
+    <footer class="page-foot">
+      <button id="exportBtn" class="quiet-btn">Export data</button>
+      <button id="importBtn" class="quiet-btn">Import data</button>
+      <input type="file" id="importInput" accept=".json,application/json" hidden>
+    </footer>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
