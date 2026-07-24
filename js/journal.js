@@ -82,7 +82,8 @@ function initFormatting(queueSave) {
   boldBtn.addEventListener('click', () => exec('bold'));
   italicBtn.addEventListener('click', () => exec('italic'));
   listBtn.addEventListener('click', () => exec('insertUnorderedList'));
-  document.getElementById('fmtLink').addEventListener('click', () => openLinkPop(null));
+  // if the cursor sits inside an existing link, the button edits that link
+  document.getElementById('fmtLink').addEventListener('click', () => openLinkPop(enclosingLink()));
 
   document.addEventListener('selectionchange', () => {
     if (!overlay.hidden) updateToolbar();
@@ -91,7 +92,7 @@ function initFormatting(queueSave) {
   editor.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
-      openLinkPop(null);
+      openLinkPop(enclosingLink());
     }
   });
 
@@ -101,13 +102,13 @@ function initFormatting(queueSave) {
     document.execCommand('insertText', false, e.clipboardData.getData('text/plain'));
   });
 
-  // click a link to edit it; ⌘-click opens it
+  // click a link to open it in a new tab; ⌘-click to edit it
   editor.addEventListener('click', (e) => {
     const a = e.target.closest('a');
     if (!a || !editor.contains(a)) return;
     e.preventDefault();
-    if (e.metaKey || e.ctrlKey) window.open(a.href, '_blank', 'noopener');
-    else openLinkPop(a);
+    if (e.metaKey || e.ctrlKey) openLinkPop(a);
+    else if (a.href) window.open(a.href, '_blank', 'noopener');
   });
 
   linkPop.addEventListener('keydown', (e) => {
@@ -132,6 +133,16 @@ function updateToolbar() {
 }
 
 /* ----- link popover ----- */
+
+// the <a> the caret or selection currently sits inside, if any
+function enclosingLink() {
+  const sel = getSelection();
+  if (!sel.rangeCount) return null;
+  let node = sel.getRangeAt(0).commonAncestorContainer;
+  if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+  const a = node?.closest('a');
+  return a && editor.contains(a) ? a : null;
+}
 
 function openLinkPop(existing) {
   editingA = existing;

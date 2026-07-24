@@ -41,8 +41,8 @@ dashboard will look empty (the data isn't gone; go back to 5180).
 - **Journal formatting:** the small toolbar offers bold (⌘B), italic (⌘I),
   bullets, and links (⌘K). Select some text and hit the link button to name a
   link like in Google Docs, or use it with nothing selected to type the text
-  and address. Click a link to change, open, or remove it; ⌘-click opens it
-  directly.
+  and address. Clicking a link opens it in a new tab; to change or remove one,
+  ⌘-click it (or place your cursor inside it and press ⌘K or the link button).
 - **Notes:** just type. Autosaves as you go.
 - **Theme:** the ◐ in the top-right toggles light / dark.
 - **Backup:** "Export data" in the footer downloads a JSON of everything
