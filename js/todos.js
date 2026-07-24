@@ -3,7 +3,7 @@
 import {
   state, subscribe, uid,
   addTodo, updateTodo, deleteTodo, cycleRank,
-  addCategory, renameCategory, deleteCategory,
+  addCategory, renameCategory, deleteCategory, moveCategory, shiftCategory,
   RANK_LABELS,
 } from './store.js';
 
@@ -14,6 +14,8 @@ const CAL_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" st
 
 let grid, strip, stripList;
 let lastAdded = null;            // { todoId, categoryId } — animate + refocus after render
+let draggingCat = null;          // category id being dragged
+let refocusHandleCat = null;     // keep focus on a handle across keyboard reorders
 const collapsedDone = new Set(); // category ids whose Done section is folded
 
 export function initTodos() {
@@ -78,6 +80,10 @@ function render() {
     if (input) input.focus();
     lastAdded = null;
   }
+  if (refocusHandleCat) {
+    grid.querySelector(`[data-cat="${refocusHandleCat}"] .card-drag`)?.focus();
+    refocusHandleCat = null;
+  }
 }
 
 function renderStrip() {
@@ -101,6 +107,19 @@ function categoryCard(cat) {
   card.dataset.cat = cat.id;
 
   const head = el('header', 'card-head');
+
+  const handle = el('button', 'card-drag', '⠿');
+  handle.title = 'Drag to reorder · arrow keys work too';
+  handle.setAttribute('aria-label', `Reorder list ${cat.name} (drag, or press arrow keys)`);
+  handle.addEventListener('mousedown', () => { card.draggable = true; });
+  handle.addEventListener('keydown', (e) => {
+    const delta = { ArrowLeft: -1, ArrowUp: -1, ArrowRight: 1, ArrowDown: 1 }[e.key];
+    if (!delta) return;
+    e.preventDefault();
+    refocusHandleCat = cat.id;
+    shiftCategory(cat.id, delta); // re-renders; focus restored in render()
+  });
+
   const title = el('h2', 'card-title', cat.name);
   title.tabIndex = 0;
   title.title = 'Rename';
@@ -116,7 +135,35 @@ function categoryCard(cat) {
       deleteCategory(cat.id);
     }
   });
-  head.append(title, del);
+  head.append(handle, title, del);
+
+  // drag & drop: dragging card A onto card B moves A to B's spot
+  card.addEventListener('dragstart', (e) => {
+    if (!card.draggable) { e.preventDefault(); return; }
+    draggingCat = cat.id;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', cat.id);
+    requestAnimationFrame(() => card.classList.add('dragging'));
+  });
+  card.addEventListener('dragend', () => {
+    card.draggable = false;
+    draggingCat = null;
+    card.classList.remove('dragging');
+    grid.querySelectorAll('.drop-target').forEach((c) => c.classList.remove('drop-target'));
+  });
+  card.addEventListener('dragover', (e) => {
+    if (!draggingCat || draggingCat === cat.id) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    card.classList.add('drop-target');
+  });
+  card.addEventListener('dragleave', () => card.classList.remove('drop-target'));
+  card.addEventListener('drop', (e) => {
+    e.preventDefault();
+    if (!draggingCat || draggingCat === cat.id) return;
+    moveCategory(draggingCat, cat.id); // re-renders
+    draggingCat = null;
+  });
 
   const add = el('input', 'add-input');
   add.placeholder = 'Add a task…';

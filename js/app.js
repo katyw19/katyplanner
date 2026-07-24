@@ -1,12 +1,15 @@
 // app.js — boot: header greeting, theme, notes autosave, backup, feature modules.
 
 import { initTodos } from './todos.js';
-import { initCalendar } from './calendar.js';
+import { initJournal } from './journal.js';
 import {
   loadNotes, saveNotes, loadTheme, saveTheme, exportData, importData,
 } from './store.js';
 
 const NAME = 'Katy';
+
+// tidy up the token cache left behind by the removed calendar feature
+localStorage.removeItem('dashboard.gcal');
 
 /* ----- header: greeting + date, refreshed each minute ----- */
 
@@ -78,4 +81,4 @@ importInput.addEventListener('change', async () => {
 /* ----- features ----- */
 
 initTodos();
-initCalendar();
+initJournal();

@@ -189,10 +189,10 @@ input, textarea { font: inherit; color: inherit; }
 }
 
 .card-head {
+  position: relative;
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
+  align-items: center;
+  gap: 7px;
 }
 
 .card-title, .panel-title {
@@ -202,7 +202,30 @@ input, textarea { font: inherit; color: inherit; }
   letter-spacing: 0.02em;
 }
 
-.card-title { cursor: text; }
+.card-title { cursor: text; flex: 1; min-width: 0; }
+
+/* reordering lists */
+
+.card-drag {
+  /* lives in the card's left padding so titles stay flush */
+  position: absolute;
+  left: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  line-height: 1;
+  padding: 2px 1px;
+  color: var(--ink-soft);
+  opacity: 0;
+  cursor: grab;
+  transition: opacity 180ms ease-out;
+}
+.card:hover .card-drag, .card-drag:focus-visible { opacity: 0.55; }
+.card-drag:hover { opacity: 1; }
+.card-drag:active { cursor: grabbing; }
+
+.card.dragging { opacity: 0.45; }
+.card.drop-target { border-color: var(--indigo); }
 
 .card-del {
   font-size: 16px;
@@ -398,58 +421,109 @@ h2 > .inline-edit, .inline-edit.title-edit {
 .new-list-editing { border-style: dashed; }
 .new-list-editing .add-input { margin-top: 0; }
 
-/* ----- calendar ---------------------------------------------------------- */
+/* ----- journal ----------------------------------------------------------- */
 
-.calendar-body { margin-top: 12px; }
-
-.cal-day { margin-bottom: 16px; }
-.cal-day:last-child { margin-bottom: 4px; }
-
-.cal-day-label {
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+.panel-note {
   color: var(--ink-soft);
-  margin-bottom: 8px;
+  font-size: 13.5px;
+  margin-top: 12px;
 }
 
-.cal-events { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.journal-list { list-style: none; margin-top: 8px; }
 
-.cal-event {
+.journal-item button {
+  width: 100%;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  text-align: left;
+  padding: 8px 8px;
+  border-radius: 8px;
+  transition: background-color 180ms ease-out;
+}
+.journal-item button:hover { background: var(--surface-alt); }
+
+.journal-item-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.journal-item-date {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+/* the focused writing sheet */
+
+.journal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: color-mix(in srgb, var(--bg) 76%, transparent);
+  backdrop-filter: blur(3px);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 6vh 20px;
+}
+
+.journal-sheet {
+  width: min(760px, 100%);
+  height: 84vh;
   display: flex;
   flex-direction: column;
-  border-left: 2px solid var(--indigo);
-  padding: 1px 0 1px 10px;
-}
-
-.cal-time { font-size: 12px; color: var(--ink-soft); }
-.cal-title { font-size: 14px; overflow-wrap: anywhere; }
-
-.cal-note {
-  color: var(--ink-soft);
-  font-size: 13.5px;
-  margin-top: 12px;
-}
-
-.cal-connect {
-  display: inline-block;
-  margin-top: 14px;
-  padding: 8px 16px;
+  background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--surface-alt);
-  font-size: 13.5px;
-  transition: border-color 180ms ease-out;
+  border-radius: 14px;
+  padding: 24px 34px 30px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.09);
+  animation: sheet-in 180ms ease-out;
 }
-.cal-connect:hover { border-color: var(--indigo); }
+@keyframes sheet-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
 
-.cal-iframe {
-  width: 100%;
-  height: 420px;
-  border: none;
-  border-radius: 8px;
-  margin-top: 12px;
+.journal-sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
 }
+
+.journal-date {
+  flex: 1;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+.journal-title {
+  font-family: var(--font-display);
+  font-size: 23px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border: none;
+  background: transparent;
+  padding: 0 0 8px;
+}
+.journal-title:focus { outline: none; }
+.journal-title::placeholder { color: var(--ink-soft); opacity: 0.55; }
+
+.journal-body {
+  flex: 1;
+  border: none;
+  background: transparent;
+  resize: none;
+  line-height: 1.8;
+  margin-top: 4px;
+}
+.journal-body:focus { outline: none; }
+.journal-body::placeholder { color: var(--ink-soft); opacity: 0.55; }
 
 /* ----- notes ------------------------------------------------------------- */
 

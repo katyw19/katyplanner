@@ -4,8 +4,8 @@ const KEYS = {
   todos: 'dashboard.todos',
   categories: 'dashboard.categories',
   notes: 'dashboard.notes',
+  journal: 'dashboard.journal',
   theme: 'dashboard.theme',
-  gcal: 'dashboard.gcal',
 };
 
 export const RANKS = ['urgent', 'soon', 'upcoming', 'someday'];
@@ -99,6 +99,26 @@ export function deleteCategory(id) {
   saveCategories();
 }
 
+// Move a category to another category's position (drag & drop).
+export function moveCategory(id, targetId) {
+  const from = state.categories.findIndex((c) => c.id === id);
+  const to = state.categories.findIndex((c) => c.id === targetId);
+  if (from < 0 || to < 0 || from === to) return;
+  const [cat] = state.categories.splice(from, 1);
+  state.categories.splice(to, 0, cat);
+  saveCategories();
+}
+
+// Nudge a category one step left/right (keyboard reordering).
+export function shiftCategory(id, delta) {
+  const from = state.categories.findIndex((c) => c.id === id);
+  const to = from + delta;
+  if (from < 0 || to < 0 || to >= state.categories.length) return;
+  const [cat] = state.categories.splice(from, 1);
+  state.categories.splice(to, 0, cat);
+  saveCategories();
+}
+
 /* ----- notes ----- */
 
 export function loadNotes() { return load(KEYS.notes, ''); }
@@ -109,11 +129,32 @@ export function saveNotes(text) { persist(KEYS.notes, text); }
 export function loadTheme() { return load(KEYS.theme, 'light'); }
 export function saveTheme(theme) { persist(KEYS.theme, theme); }
 
-/* ----- google calendar token cache ----- */
+/* ----- journal ----- */
 
-export function loadGcal() { return load(KEYS.gcal, null); }
-export function saveGcal(value) { persist(KEYS.gcal, value); }
-export function clearGcal() { localStorage.removeItem(KEYS.gcal); }
+export const journal = load(KEYS.journal, []);
+
+function persistJournal() { persist(KEYS.journal, journal); }
+
+export function addJournalEntry() {
+  const entry = { id: uid(), title: '', body: '', createdAt: Date.now(), updatedAt: Date.now() };
+  journal.unshift(entry);
+  persistJournal();
+  return entry;
+}
+
+export function updateJournalEntry(id, patch) {
+  const entry = journal.find((e) => e.id === id);
+  if (!entry) return;
+  Object.assign(entry, patch, { updatedAt: Date.now() });
+  persistJournal();
+}
+
+export function deleteJournalEntry(id) {
+  const i = journal.findIndex((e) => e.id === id);
+  if (i < 0) return;
+  journal.splice(i, 1);
+  persistJournal();
+}
 
 /* ----- backup ----- */
 
@@ -124,6 +165,7 @@ export function exportData() {
     categories: state.categories,
     todos: state.todos,
     notes: loadNotes(),
+    journal,
   }, null, 2);
 }
 
@@ -137,5 +179,10 @@ export function importData(json) {
   persist(KEYS.categories, state.categories);
   persist(KEYS.todos, state.todos);
   if (typeof data.notes === 'string') saveNotes(data.notes);
+  if (Array.isArray(data.journal)) {
+    journal.length = 0;
+    journal.push(...data.journal);
+    persistJournal();
+  }
   notify();
 }
