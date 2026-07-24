@@ -38,6 +38,11 @@ dashboard will look empty (the data isn't gone; go back to 5180).
   title optional, autosaves as you type, Esc or ← to close. Entries are listed
   newest first; open one anytime to keep writing. Private like everything else:
   entries never leave your browser.
+- **Journal formatting:** the small toolbar offers bold (⌘B), italic (⌘I),
+  bullets, and links (⌘K). Select some text and hit the link button to name a
+  link like in Google Docs, or use it with nothing selected to type the text
+  and address. Click a link to change, open, or remove it; ⌘-click opens it
+  directly.
 - **Notes:** just type. Autosaves as you go.
 - **Theme:** the ◐ in the top-right toggles light / dark.
 - **Backup:** "Export data" in the footer downloads a JSON of everything

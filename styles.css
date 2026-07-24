@@ -502,6 +502,62 @@ h2 > .inline-edit, .inline-edit.title-edit {
   color: var(--ink-soft);
 }
 
+.journal-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.fmt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 27px;
+  height: 27px;
+  border-radius: 6px;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  transition: background-color 180ms ease-out, color 180ms ease-out;
+}
+.fmt-btn:hover { background: var(--surface-alt); color: var(--ink); }
+.fmt-btn.active { background: var(--surface-alt); color: var(--ink); }
+
+.link-pop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.link-input {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  padding: 3px 2px;
+}
+.link-input:focus { outline: none; border-bottom-color: var(--indigo); }
+.link-input::placeholder { color: var(--ink-soft); opacity: 0.65; }
+
+.link-apply {
+  font-size: 12.5px;
+  padding: 5px 13px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  transition: border-color 180ms ease-out;
+}
+.link-apply:hover { border-color: var(--indigo); }
+
 .journal-title {
   font-family: var(--font-display);
   font-size: 23px;
@@ -515,15 +571,34 @@ h2 > .inline-edit, .inline-edit.title-edit {
 .journal-title::placeholder { color: var(--ink-soft); opacity: 0.55; }
 
 .journal-body {
+  position: relative;
   flex: 1;
+  overflow-y: auto;
   border: none;
   background: transparent;
-  resize: none;
   line-height: 1.8;
   margin-top: 4px;
 }
 .journal-body:focus { outline: none; }
-.journal-body::placeholder { color: var(--ink-soft); opacity: 0.55; }
+.journal-body.is-empty::before {
+  content: attr(data-placeholder);
+  position: absolute;
+  color: var(--ink-soft);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.journal-body a {
+  color: var(--indigo);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.journal-body ul, .journal-body ol {
+  padding-left: 24px;
+  margin: 4px 0;
+}
 
 /* ----- notes ------------------------------------------------------------- */
 

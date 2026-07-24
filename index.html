@@ -72,8 +72,28 @@
         <span id="journalDate" class="journal-date"></span>
         <button id="journalDelete" class="ghost-btn" aria-label="Delete entry" title="Delete entry">×</button>
       </header>
+
+      <div class="journal-toolbar" role="toolbar" aria-label="Formatting">
+        <button id="fmtBold" class="fmt-btn" title="Bold (⌘B)" aria-label="Bold"><b>B</b></button>
+        <button id="fmtItalic" class="fmt-btn" title="Italic (⌘I)" aria-label="Italic"><i>I</i></button>
+        <button id="fmtList" class="fmt-btn" title="Bulleted list" aria-label="Bulleted list">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+        </button>
+        <button id="fmtLink" class="fmt-btn" title="Insert link (⌘K)" aria-label="Insert link">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        </button>
+      </div>
+
+      <div id="linkPop" class="link-pop" hidden>
+        <input id="linkText" class="link-input" placeholder="Text" aria-label="Link text">
+        <input id="linkUrl" class="link-input" placeholder="Link (https://…)" aria-label="Link address">
+        <button id="linkApply" class="link-apply">Link</button>
+        <button id="linkOpen" class="ghost-btn" title="Open link" aria-label="Open link" hidden>↗</button>
+        <button id="linkRemove" class="ghost-btn" title="Remove link" aria-label="Remove link" hidden>×</button>
+      </div>
+
       <input id="journalTitle" class="journal-title" placeholder="Title…" aria-label="Entry title">
-      <textarea id="journalBody" class="journal-body" placeholder="Write freely…" aria-label="Entry text"></textarea>
+      <div id="journalBody" class="journal-body" contenteditable="true" data-placeholder="Write freely…" role="textbox" aria-multiline="true" aria-label="Entry text"></div>
     </div>
   </div>
 
