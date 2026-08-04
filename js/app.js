@@ -69,9 +69,9 @@ function driftPetals() {
     month >= 6 && month <= 8 ? 'summer' :
     month >= 9 && month <= 11 ? 'autumn' : 'winter';
   const box = document.getElementById('petals');
-  box.replaceChildren(...Array.from({ length: 7 }, () => {
+  box.replaceChildren(...Array.from({ length: 7 }, (_, i) => {
     const petal = document.createElement('span');
-    petal.className = `petal petal-${season}`;
+    petal.className = `petal petal-${season}${i % 2 ? ' petal-alt' : ''}`;
     const dur = 20 + Math.random() * 12;
     petal.style.setProperty('--left', `${2 + Math.random() * 96}vw`);
     petal.style.setProperty('--size', `${7 + Math.random() * 4}px`);

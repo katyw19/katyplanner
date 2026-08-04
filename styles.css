@@ -97,6 +97,12 @@ input, textarea { font: inherit; color: inherit; }
 .petal-autumn { background: color-mix(in srgb, var(--clay) 65%, var(--bg)); }
 .petal-winter { background: color-mix(in srgb, var(--grey) 55%, var(--bg)); border-radius: 50%; }
 
+/* every other petal takes a second palette color for variety */
+.petal-spring.petal-alt { background: color-mix(in srgb, var(--clay) 55%, var(--bg)); }
+.petal-summer.petal-alt { background: color-mix(in srgb, var(--indigo) 40%, var(--bg)); }
+.petal-autumn.petal-alt { background: color-mix(in srgb, var(--vermilion) 45%, var(--bg)); }
+.petal-winter.petal-alt { background: color-mix(in srgb, var(--indigo) 35%, var(--bg)); }
+
 @keyframes petal-fall {
   0%   { transform: translate3d(0, -6vh, 0) rotate(0deg); opacity: 0; }
   8%   { opacity: 0.4; }
@@ -145,8 +151,8 @@ input, textarea { font: inherit; color: inherit; }
   font-family: var(--font-display);
   font-size: 14px;
   letter-spacing: 0.4em;
-  color: var(--ink-soft);
-  opacity: 0.75;
+  color: var(--indigo);
+  opacity: 0.8;
   margin-bottom: 4px;
 }
 
@@ -203,9 +209,9 @@ input, textarea { font: inherit; color: inherit; }
   font-size: 17px;
   color: var(--ink-soft);
   opacity: 0.55;
-  transition: opacity 180ms ease-out;
+  transition: opacity 180ms ease-out, color 180ms ease-out;
 }
-.theme-toggle:hover { opacity: 1; }
+.theme-toggle:hover { opacity: 1; color: var(--clay); }
 
 /* ----- "Today" strip (urgent across all lists) --------------------------- */
 
@@ -215,8 +221,8 @@ input, textarea { font: inherit; color: inherit; }
   gap: 18px;
   margin-top: 30px;
   padding: 12px 20px;
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--vermilion) 4%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--vermilion) 22%, var(--line));
   border-radius: 12px;
 }
 
@@ -283,6 +289,7 @@ input, textarea { font: inherit; color: inherit; }
 /* ----- cards & panels ---------------------------------------------------- */
 
 .card, .panel {
+  position: relative;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -291,6 +298,31 @@ input, textarea { font: inherit; color: inherit; }
 
 .card { transition: box-shadow 180ms ease-out; }
 .card:hover { box-shadow: 0 3px 14px rgba(43, 42, 38, 0.05); }
+
+/* each card gets its own accent from the palette, cycling in order */
+.hue-0 { --hue: var(--indigo); }
+.hue-1 { --hue: var(--matcha); }
+.hue-2 { --hue: var(--clay); }
+.hue-3 { --hue: var(--vermilion); }
+.panel-journal { --hue: var(--indigo); }
+.panel-notes { --hue: var(--clay); }
+
+/* a strip of translucent washi tape holding each card up */
+.card::before, .panel::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 48px;
+  height: 15px;
+  transform: translateX(-50%) rotate(-2deg);
+  background: color-mix(in srgb, var(--hue, var(--grey)) 38%, transparent);
+  border-radius: 1px;
+}
+.hue-1::before, .hue-3::before, .panel-notes::before {
+  transform: translateX(-50%) rotate(2deg);
+}
+.new-list::before, .new-list-editing::before { content: none; }
 
 .card-head {
   position: relative;
@@ -308,15 +340,15 @@ input, textarea { font: inherit; color: inherit; }
 
 .card-title { cursor: text; flex: 1; min-width: 0; }
 
-/* a short brush-stroke under each list name */
-.card-title::after {
+/* a short brush-stroke under each list name, in the card's own color */
+.card-title::after, .panel-title::after {
   content: '';
   display: block;
   width: 22px;
   height: 2px;
   margin-top: 5px;
   border-radius: 2px;
-  background: color-mix(in srgb, var(--matcha) 50%, transparent);
+  background: color-mix(in srgb, var(--hue, var(--matcha)) 60%, transparent);
 }
 
 .card-count {
@@ -330,8 +362,8 @@ input, textarea { font: inherit; color: inherit; }
   font-family: var(--font-display);
   font-size: 12.5px;
   letter-spacing: 0.3em;
-  color: var(--ink-soft);
-  opacity: 0.45;
+  color: color-mix(in srgb, var(--hue, var(--ink-soft)) 60%, var(--ink-soft));
+  opacity: 0.55;
   padding: 14px 2px 4px;
 }
 
@@ -460,23 +492,29 @@ input, textarea { font: inherit; color: inherit; }
   align-items: center;
   gap: 6px;
   font-size: 11px;
-  color: var(--ink-soft);
-  padding: 2px 8px;
+  padding: 2px 9px;
   border-radius: 999px;
   transition: background-color 180ms ease-out;
 }
-.rank-chip:hover { background: var(--surface-alt); }
+
+/* soft colored pills — the rank's color tints both text and background */
+.rank-chip[data-rank="urgent"]   { --rank: var(--vermilion); }
+.rank-chip[data-rank="soon"]     { --rank: var(--clay); }
+.rank-chip[data-rank="upcoming"] { --rank: var(--indigo); }
+.rank-chip[data-rank="someday"]  { --rank: var(--grey); }
+
+.rank-chip {
+  color: color-mix(in srgb, var(--rank) 80%, var(--ink));
+  background: color-mix(in srgb, var(--rank) 10%, transparent);
+}
+.rank-chip:hover { background: color-mix(in srgb, var(--rank) 18%, transparent); }
 
 .dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--indigo);
+  background: var(--rank, var(--indigo));
 }
-.rank-chip[data-rank="urgent"]   .dot { background: var(--vermilion); }
-.rank-chip[data-rank="soon"]     .dot { background: var(--clay); }
-.rank-chip[data-rank="upcoming"] .dot { background: var(--indigo); }
-.rank-chip[data-rank="someday"]  .dot { background: var(--grey); }
 
 .task-actions {
   display: flex;
@@ -568,7 +606,7 @@ h2 > .inline-edit, .inline-edit.title-edit {
   text-align: left;
   transition: border-color 180ms ease-out, color 180ms ease-out;
 }
-.new-list:hover { border-color: var(--grey); color: var(--ink); }
+.new-list:hover { border-color: color-mix(in srgb, var(--matcha) 60%, var(--line)); color: var(--matcha); }
 
 .new-list-editing { border-style: dashed; }
 .new-list-editing .add-input { margin-top: 0; }
@@ -593,7 +631,7 @@ h2 > .inline-edit, .inline-edit.title-edit {
   border-radius: 8px;
   transition: background-color 180ms ease-out;
 }
-.journal-item button:hover { background: var(--surface-alt); }
+.journal-item button:hover { background: color-mix(in srgb, var(--indigo) 7%, transparent); }
 
 .journal-item-title {
   flex: 1;
@@ -763,11 +801,11 @@ h2 > .inline-edit, .inline-edit.title-edit {
   border: none;
   resize: vertical;
   line-height: 30px;
-  /* faint ruled lines, like washi letter paper */
+  /* faint ruled lines, like indigo-lined washi letter paper */
   background-image: repeating-linear-gradient(
     to bottom,
     transparent 0 29px,
-    color-mix(in srgb, var(--line) 65%, transparent) 29px 30px
+    color-mix(in srgb, var(--indigo) 22%, transparent) 29px 30px
   );
   background-attachment: local;
 }
@@ -787,9 +825,9 @@ h2 > .inline-edit, .inline-edit.title-edit {
   font-size: 12px;
   color: var(--ink-soft);
   opacity: 0.75;
-  transition: opacity 180ms ease-out;
+  transition: opacity 180ms ease-out, color 180ms ease-out;
 }
-.quiet-btn:hover { opacity: 1; text-decoration: underline; text-underline-offset: 3px; }
+.quiet-btn:hover { opacity: 1; color: var(--indigo); text-decoration: underline; text-underline-offset: 3px; }
 
 /* ----- motion: paper settling, or none at all ----------------------------- */
 

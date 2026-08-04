@@ -102,8 +102,8 @@ function renderStrip() {
   }));
 }
 
-function categoryCard(cat) {
-  const card = el('section', 'card');
+function categoryCard(cat, index) {
+  const card = el('section', `card hue-${index % 4}`);
   card.dataset.cat = cat.id;
 
   const tasks = state.todos.filter((t) => t.categoryId === cat.id);
