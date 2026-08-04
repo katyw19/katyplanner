@@ -63,10 +63,65 @@ input, textarea { font: inherit; color: inherit; }
 }
 
 .page {
+  position: relative;
+  z-index: 1;
   max-width: 1180px;
   margin: 0 auto;
   padding: 56px 44px 72px;
 }
+
+/* ----- quiet decoration: petals + seigaiha waves ------------------------- */
+
+.petals {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.petal {
+  position: absolute;
+  top: 0;
+  left: var(--left);
+  width: var(--size);
+  height: calc(var(--size) * 1.2);
+  border-radius: 64% 8% 64% 8%;
+  opacity: 0;
+  will-change: transform;
+  animation: petal-fall var(--dur) linear var(--delay) infinite;
+}
+
+.petal-spring { background: color-mix(in srgb, var(--vermilion) 40%, var(--bg)); }
+.petal-summer { background: color-mix(in srgb, var(--matcha) 55%, var(--bg)); }
+.petal-autumn { background: color-mix(in srgb, var(--clay) 65%, var(--bg)); }
+.petal-winter { background: color-mix(in srgb, var(--grey) 55%, var(--bg)); border-radius: 50%; }
+
+@keyframes petal-fall {
+  0%   { transform: translate3d(0, -6vh, 0) rotate(0deg); opacity: 0; }
+  8%   { opacity: 0.4; }
+  30%  { transform: translate3d(calc(var(--sway) * -1), 28vh, 0) rotate(120deg); }
+  60%  { transform: translate3d(var(--sway), 58vh, 0) rotate(240deg); }
+  88%  { opacity: 0.4; }
+  100% { transform: translate3d(calc(var(--sway) * -0.5), 106vh, 0) rotate(355deg); opacity: 0; }
+}
+
+.wave-band {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 110px;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='60'%3E%3Cg fill='none' stroke='%238A8375' stroke-width='1.3'%3E%3Cpath d='M3 30a27 27 0 0 1 54 0M11 30a19 19 0 0 1 38 0M19 30a11 11 0 0 1 22 0M63 30a27 27 0 0 1 54 0M71 30a19 19 0 0 1 38 0M79 30a11 11 0 0 1 22 0M-27 60a27 27 0 0 1 54 0M-19 60a19 19 0 0 1 38 0M-11 60a11 11 0 0 1 22 0M33 60a27 27 0 0 1 54 0M41 60a19 19 0 0 1 38 0M49 60a11 11 0 0 1 22 0M93 60a27 27 0 0 1 54 0M101 60a19 19 0 0 1 38 0M109 60a11 11 0 0 1 22 0'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 120px 60px;
+  mask-image: linear-gradient(transparent, black 75%);
+  -webkit-mask-image: linear-gradient(transparent, black 75%);
+}
+
+:root[data-theme="dark"] .wave-band { opacity: 0.06; }
 
 /* ----- header ------------------------------------------------------------ */
 
@@ -102,9 +157,43 @@ input, textarea { font: inherit; color: inherit; }
   letter-spacing: 0.02em;
 }
 
+/* a small vermilion "seal" full stop after the greeting */
+.greeting::after {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 10px;
+  border-radius: 50%;
+  background: var(--vermilion);
+  opacity: 0.75;
+}
+
 .today-date {
   margin-top: 4px;
   color: var(--ink-soft);
+}
+
+.proverb {
+  margin-top: 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.proverb-jp {
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+  opacity: 0.85;
+}
+
+.proverb-en {
+  font-size: 12px;
+  color: var(--ink-soft);
+  opacity: 0.6;
 }
 
 .theme-toggle {
@@ -122,22 +211,34 @@ input, textarea { font: inherit; color: inherit; }
 
 .today-strip {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 18px;
   margin-top: 30px;
-  padding: 14px 20px;
+  padding: 12px 20px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 12px;
 }
 
-.strip-label {
-  font-family: var(--font-display);
-  font-size: 12px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--vermilion);
+/* hanko-style stamp: 今日 — "today" */
+.strip-seal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-family: var(--font-display);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: #FAF6EC;
+  background: var(--vermilion);
+  width: 26px;
+  padding: 7px 0;
+  border-radius: 6px;
+  transform: rotate(-3deg);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.14);
 }
 
 .strip-list {
@@ -188,6 +289,9 @@ input, textarea { font: inherit; color: inherit; }
   padding: 20px 20px 16px;
 }
 
+.card { transition: box-shadow 180ms ease-out; }
+.card:hover { box-shadow: 0 3px 14px rgba(43, 42, 38, 0.05); }
+
 .card-head {
   position: relative;
   display: flex;
@@ -203,6 +307,33 @@ input, textarea { font: inherit; color: inherit; }
 }
 
 .card-title { cursor: text; flex: 1; min-width: 0; }
+
+/* a short brush-stroke under each list name */
+.card-title::after {
+  content: '';
+  display: block;
+  width: 22px;
+  height: 2px;
+  margin-top: 5px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--matcha) 50%, transparent);
+}
+
+.card-count {
+  font-size: 11px;
+  color: var(--ink-soft);
+  opacity: 0.65;
+  font-variant-numeric: tabular-nums;
+}
+
+.empty-hint {
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  letter-spacing: 0.3em;
+  color: var(--ink-soft);
+  opacity: 0.45;
+  padding: 14px 2px 4px;
+}
 
 /* reordering lists */
 
@@ -275,6 +406,12 @@ input, textarea { font: inherit; color: inherit; }
   to   { opacity: 1; transform: none; }
 }
 .task.leaving { opacity: 0.15; }
+
+/* a brief vermilion "stamp" as a task completes */
+.task.leaving .check {
+  background: var(--vermilion);
+  border-color: var(--vermilion);
+}
 
 .check {
   flex-shrink: 0;
@@ -384,7 +521,22 @@ input, textarea { font: inherit; color: inherit; }
   text-decoration-color: var(--grey);
   cursor: default;
 }
-.done-tasks .check { background: var(--grey); border-color: var(--grey); }
+.done-tasks .check {
+  position: relative;
+  background: var(--grey);
+  border-color: var(--grey);
+}
+.done-tasks .check::after {
+  content: '✓';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--surface);
+}
 
 /* inline edit (task text / list name) */
 
@@ -454,6 +606,7 @@ h2 > .inline-edit, .inline-edit.title-edit {
 
 .journal-item-date {
   flex-shrink: 0;
+  font-family: var(--font-display);
   font-size: 11px;
   color: var(--ink-soft);
 }
@@ -609,7 +762,14 @@ h2 > .inline-edit, .inline-edit.title-edit {
   background: transparent;
   border: none;
   resize: vertical;
-  line-height: 1.7;
+  line-height: 30px;
+  /* faint ruled lines, like washi letter paper */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0 29px,
+    color-mix(in srgb, var(--line) 65%, transparent) 29px 30px
+  );
+  background-attachment: local;
 }
 .notes:focus { outline: none; }
 .notes::placeholder { color: var(--ink-soft); opacity: 0.65; }

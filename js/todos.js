@@ -106,6 +106,10 @@ function categoryCard(cat) {
   const card = el('section', 'card');
   card.dataset.cat = cat.id;
 
+  const tasks = state.todos.filter((t) => t.categoryId === cat.id);
+  const open = tasks.filter((t) => !t.done).sort(compareTasks);
+  const done = tasks.filter((t) => t.done).sort(compareTasks);
+
   const head = el('header', 'card-head');
 
   const handle = el('button', 'card-drag', '⠿');
@@ -130,12 +134,17 @@ function categoryCard(cat) {
   const del = el('button', 'card-del', '×');
   del.setAttribute('aria-label', `Delete list ${cat.name}`);
   del.addEventListener('click', () => {
-    const count = state.todos.filter((t) => t.categoryId === cat.id).length;
-    if (count === 0 || confirm(`Delete “${cat.name}” and its ${count} task${count === 1 ? '' : 's'}?`)) {
+    if (tasks.length === 0 || confirm(`Delete “${cat.name}” and its ${tasks.length} task${tasks.length === 1 ? '' : 's'}?`)) {
       deleteCategory(cat.id);
     }
   });
-  head.append(handle, title, del);
+  head.append(handle, title);
+  if (open.length) {
+    const count = el('span', 'card-count', String(open.length));
+    count.title = `${open.length} open task${open.length === 1 ? '' : 's'}`;
+    head.append(count);
+  }
+  head.append(del);
 
   // drag & drop: dragging card A onto card B moves A to B's spot
   card.addEventListener('dragstart', (e) => {
@@ -177,14 +186,16 @@ function categoryCard(cat) {
     }
   });
 
-  const tasks = state.todos.filter((t) => t.categoryId === cat.id);
-  const open = tasks.filter((t) => !t.done).sort(compareTasks);
-  const done = tasks.filter((t) => t.done).sort(compareTasks);
-
   const list = el('ul', 'tasks');
   open.forEach((t) => list.append(taskRow(t)));
 
   card.append(head, add, list);
+
+  if (!tasks.length) {
+    const hint = el('p', 'empty-hint', '静か');
+    hint.title = 'quiet';
+    card.append(hint);
+  }
 
   if (done.length) {
     const folded = collapsedDone.has(cat.id);

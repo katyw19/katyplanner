@@ -21,6 +21,10 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M 78 22 A 40 40 0 1 0 82 55' fill='none' stroke='%23C1502E' stroke-width='9' stroke-linecap='round'/%3E%3C/svg%3E">
 </head>
 <body>
+  <!-- seasonal petals + wave motif, both purely decorative and behind everything -->
+  <div class="petals" id="petals" aria-hidden="true"></div>
+  <div class="wave-band" aria-hidden="true"></div>
+
   <div class="page">
     <header class="masthead">
       <svg class="enso" viewBox="0 0 100 100" aria-hidden="true">
@@ -29,11 +33,15 @@
       <p class="jp-greeting" id="jpGreeting"></p>
       <h1 class="greeting" id="greeting"></h1>
       <p class="today-date" id="todayDate"></p>
+      <p class="proverb">
+        <span class="proverb-jp" id="proverbJp"></span>
+        <span class="proverb-en" id="proverbEn"></span>
+      </p>
       <button id="themeToggle" class="theme-toggle" aria-label="Switch theme" title="Light / dark">◐</button>
     </header>
 
     <section class="today-strip" id="todayStrip" aria-label="Urgent today" hidden>
-      <span class="strip-label">Today</span>
+      <span class="strip-seal" aria-hidden="true">今日</span>
       <ul class="strip-list" id="todayStripList"></ul>
     </section>
 

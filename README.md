@@ -45,6 +45,11 @@ dashboard will look empty (the data isn't gone; go back to 5180).
   ⌘-click it (or place your cursor inside it and press ⌘K or the link button).
 - **Notes:** just type. Autosaves as you go.
 - **Theme:** the ◐ in the top-right toggles light / dark.
+- **Little touches:** a few seasonal petals drift by (sakura-red in spring,
+  matcha in summer, clay in autumn, snow in winter — they stay home if your
+  system prefers reduced motion), a daily kotowaza (proverb) sits under the
+  date, the urgent strip is stamped with a 今日 seal, and completing a task
+  flashes a tiny vermilion stamp.
 - **Backup:** "Export data" in the footer downloads a JSON of everything
   (tasks, lists, notes, journal); "Import data" restores it.
 
