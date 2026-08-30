@@ -4,15 +4,17 @@
 
 import {
   subscribe, journal, addJournalEntry, updateJournalEntry, deleteJournalEntry,
+  journalFolders, addJournalFolder, renameJournalFolder, deleteJournalFolder,
 } from './store.js';
 
-let list, empty, overlay, editor, titleInput, dateLabel;
+let list, empty, overlay, editor, titleInput, dateLabel, folderSelect;
 let boldBtn, italicBtn, listBtn;
 let linkPop, linkText, linkUrl, linkOpen, linkRemove;
 let openId = null;
 let saveTimer = null;
 let savedRange = null;  // selection to restore when the link popover takes focus
 let editingA = null;    // existing <a> being edited via the popover
+const foldedFolders = new Set(); // folder ids currently collapsed in the list
 
 export function initJournal() {
   list = document.getElementById('journalList');
@@ -21,6 +23,7 @@ export function initJournal() {
   editor = document.getElementById('journalBody');
   titleInput = document.getElementById('journalTitle');
   dateLabel = document.getElementById('journalDate');
+  folderSelect = document.getElementById('journalFolder');
   boldBtn = document.getElementById('fmtBold');
   italicBtn = document.getElementById('fmtItalic');
   listBtn = document.getElementById('fmtList');
@@ -32,6 +35,12 @@ export function initJournal() {
 
   document.getElementById('journalNew').addEventListener('click', () => {
     openEntry(addJournalEntry().id);
+  });
+  document.getElementById('journalNewFolder').addEventListener('click', startNewFolder);
+  folderSelect.addEventListener('change', () => {
+    if (!openId) return;
+    updateJournalEntry(openId, { folderId: folderSelect.value || null });
+    renderList();
   });
   document.getElementById('journalBack').addEventListener('click', closeEntry);
   document.getElementById('journalDelete').addEventListener('click', () => {
@@ -270,6 +279,7 @@ function openEntry(id) {
   titleInput.value = entry.title;
   bodyToEditor(entry);
   updateEmptyHint();
+  refreshFolderSelect(entry);
   dateLabel.textContent = new Date(entry.createdAt).toLocaleDateString('en-US', {
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
   });
@@ -325,18 +335,133 @@ function renderList() {
     overlay.hidden = true;
   }
 
-  empty.hidden = journal.length > 0;
+  empty.hidden = journal.length > 0 || journalFolders.length > 0;
   const sorted = [...journal].sort((a, b) => b.createdAt - a.createdAt);
-  list.replaceChildren(...sorted.map((entry) => {
-    const item = el('li', 'journal-item');
-    const btn = el('button');
-    btn.append(
-      el('span', 'journal-item-title', entryLabel(entry)),
-      el('span', 'journal-item-date',
-        new Date(entry.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
-    );
-    btn.addEventListener('click', () => openEntry(entry.id));
-    item.append(btn);
-    return item;
-  }));
+  const knownFolder = (id) => journalFolders.some((f) => f.id === id);
+  const items = [];
+
+  for (const folder of journalFolders) {
+    const filed = sorted.filter((e) => e.folderId === folder.id);
+    items.push(folderRow(folder, filed.length));
+    if (!foldedFolders.has(folder.id)) filed.forEach((e) => items.push(entryItem(e, true)));
+  }
+
+  const unfiled = sorted.filter((e) => !e.folderId || !knownFolder(e.folderId));
+  if (unfiled.length && journalFolders.length) items.push(el('li', 'unfiled-label', 'Unfiled'));
+  unfiled.forEach((e) => items.push(entryItem(e, false)));
+
+  list.replaceChildren(...items);
+}
+
+function entryItem(entry, inFolder) {
+  const item = el('li', `journal-item${inFolder ? ' in-folder' : ''}`);
+  const btn = el('button');
+  btn.append(
+    el('span', 'journal-item-title', entryLabel(entry)),
+    el('span', 'journal-item-date',
+      new Date(entry.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+  );
+  btn.addEventListener('click', () => openEntry(entry.id));
+  item.append(btn);
+  return item;
+}
+
+/* ----- folders ----- */
+
+function refreshFolderSelect(entry) {
+  folderSelect.hidden = journalFolders.length === 0;
+  folderSelect.replaceChildren(
+    new Option('No folder', ''),
+    ...journalFolders.map((f) => new Option(f.name, f.id)),
+  );
+  folderSelect.value =
+    entry.folderId && journalFolders.some((f) => f.id === entry.folderId) ? entry.folderId : '';
+}
+
+function folderRow(folder, count) {
+  const row = el('li', 'journal-folder');
+  const folded = foldedFolders.has(folder.id);
+
+  const toggle = el('button', 'folder-toggle');
+  toggle.setAttribute('aria-expanded', String(!folded));
+  toggle.title = folded ? 'Open folder' : 'Fold folder';
+  toggle.append(
+    el('span', 'folder-chevron', folded ? '▸' : '▾'),
+    el('span', 'folder-name', folder.name),
+    el('span', 'folder-count', String(count)),
+  );
+  toggle.addEventListener('click', () => {
+    if (folded) foldedFolders.delete(folder.id);
+    else foldedFolders.add(folder.id);
+    renderList();
+  });
+
+  const rename = el('button', 'ghost-btn folder-act', '✎');
+  rename.title = 'Rename folder';
+  rename.setAttribute('aria-label', `Rename folder ${folder.name}`);
+  rename.addEventListener('click', () => beginFolderRename(row, folder));
+
+  const del = el('button', 'ghost-btn folder-act', '×');
+  del.title = 'Delete folder';
+  del.setAttribute('aria-label', `Delete folder ${folder.name}`);
+  del.addEventListener('click', () => {
+    const keep = `Its ${count} entr${count === 1 ? 'y' : 'ies'} will stay in the journal, unfiled.`;
+    if (count === 0 || confirm(`Delete “${folder.name}”? ${keep}`)) {
+      deleteJournalFolder(folder.id);
+      if (openId) refreshFolderSelect(journal.find((e) => e.id === openId) ?? { folderId: null });
+      renderList();
+    }
+  });
+
+  row.append(toggle, rename, del);
+  return row;
+}
+
+function beginFolderRename(row, folder) {
+  const input = el('input', 'add-input folder-input');
+  input.value = folder.name;
+  input.setAttribute('aria-label', 'Folder name');
+  row.replaceChildren(input);
+  input.focus();
+  input.setSelectionRange(folder.name.length, folder.name.length);
+
+  let closed = false;
+  const close = (save) => {
+    if (closed) return;
+    closed = true;
+    const name = input.value.trim();
+    if (save && name && name !== folder.name) renameJournalFolder(folder.id, name);
+    if (openId) refreshFolderSelect(journal.find((e) => e.id === openId) ?? { folderId: null });
+    renderList();
+  };
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') close(true);
+    else if (e.key === 'Escape') close(false);
+  });
+  input.addEventListener('blur', () => close(true));
+}
+
+function startNewFolder() {
+  if (list.querySelector('.folder-input')) return; // one at a time
+  const row = el('li', 'journal-folder');
+  const input = el('input', 'add-input folder-input');
+  input.placeholder = 'Folder name…';
+  input.setAttribute('aria-label', 'New folder name');
+  row.append(input);
+  list.prepend(row);
+  input.focus();
+
+  let closed = false;
+  const close = (save) => {
+    if (closed) return;
+    closed = true;
+    const name = input.value.trim();
+    if (save && name) addJournalFolder(name);
+    renderList();
+  };
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') close(true);
+    else if (e.key === 'Escape') close(false);
+  });
+  input.addEventListener('blur', () => close(true));
 }

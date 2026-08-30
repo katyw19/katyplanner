@@ -52,7 +52,12 @@
         <section class="panel panel-journal" aria-label="Journal">
           <div class="panel-head">
             <h2 class="panel-title">Journal</h2>
-            <button id="journalNew" class="ghost-btn" aria-label="New journal entry" title="New entry">＋</button>
+            <span class="panel-actions">
+              <button id="journalNewFolder" class="ghost-btn" aria-label="New folder" title="New folder">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              </button>
+              <button id="journalNew" class="ghost-btn" aria-label="New journal entry" title="New entry">＋</button>
+            </span>
           </div>
           <p id="journalEmpty" class="panel-note" hidden>A quiet place for longer thoughts. Only you see these.</p>
           <ul id="journalList" class="journal-list"></ul>
@@ -78,6 +83,7 @@
       <header class="journal-sheet-head">
         <button id="journalBack" class="ghost-btn" aria-label="Close entry" title="Close (Esc)">←</button>
         <span id="journalDate" class="journal-date"></span>
+        <select id="journalFolder" class="journal-folder-pick" aria-label="Folder" title="File this entry in a folder" hidden></select>
         <button id="journalDelete" class="ghost-btn" aria-label="Delete entry" title="Delete entry">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M10 11v6M14 11v6"/></svg>
         </button>

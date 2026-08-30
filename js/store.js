@@ -5,6 +5,7 @@ const KEYS = {
   categories: 'dashboard.categories',
   notes: 'dashboard.notes',
   journal: 'dashboard.journal',
+  journalFolders: 'dashboard.journalFolders',
   theme: 'dashboard.theme',
 };
 
@@ -136,10 +137,43 @@ export const journal = load(KEYS.journal, []);
 function persistJournal() { persist(KEYS.journal, journal); }
 
 export function addJournalEntry() {
-  const entry = { id: uid(), title: '', body: '', createdAt: Date.now(), updatedAt: Date.now() };
+  const entry = { id: uid(), title: '', body: '', folderId: null, createdAt: Date.now(), updatedAt: Date.now() };
   journal.unshift(entry);
   persistJournal();
   return entry;
+}
+
+/* ----- journal folders ----- */
+
+export const journalFolders = load(KEYS.journalFolders, []);
+
+function persistJournalFolders() { persist(KEYS.journalFolders, journalFolders); }
+
+export function addJournalFolder(name) {
+  const folder = { id: uid(), name };
+  journalFolders.push(folder);
+  persistJournalFolders();
+  return folder;
+}
+
+export function renameJournalFolder(id, name) {
+  const folder = journalFolders.find((f) => f.id === id);
+  if (!folder) return;
+  folder.name = name;
+  persistJournalFolders();
+}
+
+// Deleting a folder never deletes entries — they go back to unfiled.
+export function deleteJournalFolder(id) {
+  const i = journalFolders.findIndex((f) => f.id === id);
+  if (i < 0) return;
+  journalFolders.splice(i, 1);
+  persistJournalFolders();
+  let unfiled = false;
+  journal.forEach((e) => {
+    if (e.folderId === id) { e.folderId = null; unfiled = true; }
+  });
+  if (unfiled) persistJournal();
 }
 
 export function updateJournalEntry(id, patch) {
@@ -166,6 +200,7 @@ export function exportData() {
     todos: state.todos,
     notes: loadNotes(),
     journal,
+    journalFolders,
   }, null, 2);
 }
 
@@ -183,6 +218,11 @@ export function importData(json) {
     journal.length = 0;
     journal.push(...data.journal);
     persistJournal();
+  }
+  if (Array.isArray(data.journalFolders)) {
+    journalFolders.length = 0;
+    journalFolders.push(...data.journalFolders);
+    persistJournalFolders();
   }
   notify();
 }

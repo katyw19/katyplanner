@@ -38,6 +38,11 @@ dashboard will look empty (the data isn't gone; go back to 5180).
   title optional, autosaves as you type, Esc or ← to close. Entries are listed
   newest first; open one anytime to keep writing. Private like everything else:
   entries never leave your browser.
+- **Journal folders:** the little folder icon in the Journal panel creates a
+  named folder. Open an entry and use the quiet "No folder" picker at the top
+  of the sheet to file it. Folder rows fold/unfold on click; hover one for
+  rename (✎) and delete (×) — deleting a folder never deletes entries, they
+  just return to the unfiled list.
 - **Journal formatting:** the small toolbar offers bold (⌘B), italic (⌘I),
   bullets, and links (⌘K). Select some text and hit the link button to name a
   link like in Google Docs, or use it with nothing selected to type the text
@@ -56,7 +61,8 @@ dashboard will look empty (the data isn't gone; go back to 5180).
 ## Where your data lives
 
 localStorage keys: `dashboard.todos`, `dashboard.categories`,
-`dashboard.notes`, `dashboard.journal`, `dashboard.theme`.
+`dashboard.notes`, `dashboard.journal`, `dashboard.journalFolders`,
+`dashboard.theme`.
 Clearing site data for localhost erases them — export a backup first.
 
 ## Files
