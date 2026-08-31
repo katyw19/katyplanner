@@ -125,6 +125,21 @@ function initFormatting() {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
       openLinkPop(enclosingLink());
+      return;
+    }
+    // Backspace at the start of a checklist line removes its box and
+    // releases the line from the checklist (instead of eating text)
+    if (e.key === 'Backspace') {
+      const sel = getSelection();
+      if (!sel.rangeCount || !sel.isCollapsed) return;
+      const li = enclosingEl('li');
+      if (!li || !li.parentElement?.matches('ul.checklist')) return;
+      if (caretTextOffset(li) !== 0) return;
+      e.preventDefault();
+      li.querySelector(':scope > input[type="checkbox"]')?.remove();
+      document.execCommand('outdent'); // lifts the line out, splitting the list if needed
+      updateToolbar();
+      queueSave();
     }
   });
 
@@ -195,8 +210,20 @@ function ensureBoxes(ul) {
   }
 }
 
-// pressing Enter clones a bare <li>; give every checklist line its box back
+// pressing Enter clones a bare <li>; give every checklist line its box back.
+// Boxes that escaped their checklist (via deletes/merges) are swept away, and
+// a line never carries more than one.
 function normalizeChecklists() {
+  for (const box of editor.querySelectorAll('input[type="checkbox"]')) {
+    const li = box.closest('li');
+    if (!li || box.parentElement !== li || !li.parentElement?.matches('ul.checklist')) {
+      box.remove();
+    }
+  }
+  for (const li of editor.querySelectorAll('ul.checklist > li')) {
+    const boxes = li.querySelectorAll(':scope > input[type="checkbox"]');
+    for (let i = 1; i < boxes.length; i++) boxes[i].remove();
+  }
   editor.querySelectorAll('ul.checklist').forEach(ensureBoxes);
 }
 
