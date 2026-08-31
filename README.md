@@ -44,7 +44,8 @@ dashboard will look empty (the data isn't gone; go back to 5180).
   rename (✎) and delete (×) — deleting a folder never deletes entries, they
   just return to the unfiled list.
 - **Journal formatting:** the small toolbar offers bold (⌘B), italic (⌘I),
-  bullets, and links (⌘K). Select some text and hit the link button to name a
+  bullets, checklists (tick a box and the line crosses itself off — the state
+  saves with the entry), and links (⌘K). Select some text and hit the link button to name a
   link like in Google Docs, or use it with nothing selected to type the text
   and address. Clicking a link opens it in a new tab; to change or remove one,
   ⌘-click it (or place your cursor inside it and press ⌘K or the link button).

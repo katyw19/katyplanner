@@ -8,7 +8,7 @@ import {
 } from './store.js';
 
 let list, empty, overlay, editor, titleInput, dateLabel, folderSelect;
-let boldBtn, italicBtn, listBtn;
+let boldBtn, italicBtn, listBtn, checkBtn;
 let linkPop, linkText, linkUrl, linkOpen, linkRemove;
 let openId = null;
 let saveTimer = null;
@@ -27,6 +27,7 @@ export function initJournal() {
   boldBtn = document.getElementById('fmtBold');
   italicBtn = document.getElementById('fmtItalic');
   listBtn = document.getElementById('fmtList');
+  checkBtn = document.getElementById('fmtCheck');
   linkPop = document.getElementById('linkPop');
   linkText = document.getElementById('linkText');
   linkUrl = document.getElementById('linkUrl');
@@ -54,14 +55,10 @@ export function initJournal() {
     }
   });
 
-  const queueSave = () => {
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(saveOpenEntry, 400);
-  };
   titleInput.addEventListener('input', queueSave);
-  editor.addEventListener('input', () => { updateEmptyHint(); queueSave(); });
+  editor.addEventListener('input', () => { normalizeChecklists(); updateEmptyHint(); queueSave(); });
 
-  initFormatting(queueSave);
+  initFormatting();
 
   overlay.addEventListener('click', (e) => { if (e.target === overlay) closeEntry(); });
   document.addEventListener('keydown', (e) => {
@@ -77,7 +74,12 @@ export function initJournal() {
 
 /* ----- formatting toolbar ----- */
 
-function initFormatting(queueSave) {
+function queueSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveOpenEntry, 400);
+}
+
+function initFormatting() {
   const exec = (cmd) => {
     editor.focus();
     document.execCommand(cmd, false, null);
@@ -85,14 +87,35 @@ function initFormatting(queueSave) {
     queueSave();
   };
   // keep the editor's selection when pressing toolbar buttons
-  for (const btn of [boldBtn, italicBtn, listBtn, document.getElementById('fmtLink')]) {
+  for (const btn of [boldBtn, italicBtn, listBtn, checkBtn, document.getElementById('fmtLink')]) {
     btn.addEventListener('mousedown', (e) => e.preventDefault());
   }
   boldBtn.addEventListener('click', () => exec('bold'));
   italicBtn.addEventListener('click', () => exec('italic'));
-  listBtn.addEventListener('click', () => exec('insertUnorderedList'));
+  listBtn.addEventListener('click', () => {
+    // bullet button on a checklist turns it into plain bullets
+    const checklist = enclosingEl('ul.checklist');
+    if (checklist) {
+      checklist.querySelectorAll('input[type="checkbox"]').forEach((box) => box.remove());
+      checklist.removeAttribute('class');
+      updateToolbar();
+      queueSave();
+      return;
+    }
+    exec('insertUnorderedList');
+  });
+  checkBtn.addEventListener('click', toggleChecklist);
   // if the cursor sits inside an existing link, the button edits that link
   document.getElementById('fmtLink').addEventListener('click', () => openLinkPop(enclosingLink()));
+
+  // ticking a box: mirror the property onto the attribute so it persists in saved HTML
+  editor.addEventListener('change', (e) => {
+    const box = e.target;
+    if (box.matches?.('input[type="checkbox"]')) {
+      box.toggleAttribute('checked', box.checked);
+      queueSave();
+    }
+  });
 
   document.addEventListener('selectionchange', () => {
     if (!overlay.hidden) updateToolbar();
@@ -136,21 +159,119 @@ function initFormatting(queueSave) {
 
 function updateToolbar() {
   const inEditor = editor.contains(getSelection().anchorNode);
+  const inChecklist = inEditor && !!enclosingEl('ul.checklist');
   boldBtn.classList.toggle('active', inEditor && document.queryCommandState('bold'));
   italicBtn.classList.toggle('active', inEditor && document.queryCommandState('italic'));
-  listBtn.classList.toggle('active', inEditor && document.queryCommandState('insertUnorderedList'));
+  listBtn.classList.toggle('active', !inChecklist && inEditor && document.queryCommandState('insertUnorderedList'));
+  checkBtn.classList.toggle('active', inChecklist);
+}
+
+/* ----- checklists ----- */
+
+function makeCheckbox() {
+  const box = document.createElement('input');
+  box.type = 'checkbox';
+  return box;
+}
+
+function ensureBoxes(ul) {
+  const sel = getSelection();
+  for (const li of ul.querySelectorAll(':scope > li')) {
+    if (li.querySelector(':scope > input[type="checkbox"]')) continue;
+    const box = makeCheckbox();
+    li.prepend(box);
+    // if the caret would sit before the new box, nudge it after — but leave a
+    // caret that's already inside the line's text exactly where it is
+    if (sel.rangeCount && li.contains(sel.anchorNode)) {
+      const caret = sel.getRangeAt(0);
+      const afterBox = document.createRange();
+      afterBox.setStartAfter(box);
+      afterBox.collapse(true);
+      if (caret.compareBoundaryPoints(Range.START_TO_START, afterBox) < 0) {
+        sel.removeAllRanges();
+        sel.addRange(afterBox);
+      }
+    }
+  }
+}
+
+// pressing Enter clones a bare <li>; give every checklist line its box back
+function normalizeChecklists() {
+  editor.querySelectorAll('ul.checklist').forEach(ensureBoxes);
+}
+
+// insertUnorderedList rebuilds the line and drops the caret at its start, so
+// track the caret as "characters into the line" and re-find that spot after.
+function caretTextOffset(block) {
+  const sel = getSelection();
+  if (!sel.rangeCount || !block.contains(sel.getRangeAt(0).startContainer)) return null;
+  const range = sel.getRangeAt(0);
+  const before = range.cloneRange();
+  before.selectNodeContents(block);
+  before.setEnd(range.startContainer, range.startOffset);
+  return before.toString().length;
+}
+
+function setCaretTextOffset(block, offset) {
+  const sel = getSelection();
+  const range = document.createRange();
+  const walker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT);
+  let remaining = offset;
+  let node;
+  while ((node = walker.nextNode())) {
+    if (remaining <= node.textContent.length) {
+      range.setStart(node, remaining);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      return;
+    }
+    remaining -= node.textContent.length;
+  }
+  range.selectNodeContents(block); // fallback: end of the line
+  range.collapse(false);
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+function toggleChecklist() {
+  editor.focus();
+  const offset = caretTextOffset(enclosingEl('li, div, p') ?? editor);
+  const existing = enclosingEl('ul.checklist');
+  if (existing) {
+    // back to plain text: drop the boxes, then unwrap the list
+    existing.querySelectorAll('input[type="checkbox"]').forEach((box) => box.remove());
+    existing.removeAttribute('class');
+    document.execCommand('insertUnorderedList');
+  } else {
+    // a plain bullet list converts in place; otherwise make a list first
+    if (!enclosingEl('ul')) document.execCommand('insertUnorderedList');
+    const ul = enclosingEl('ul');
+    if (ul) {
+      ul.setAttribute('class', 'checklist');
+      ensureBoxes(ul);
+    }
+  }
+  const line = enclosingEl('li, div, p');
+  if (line && offset !== null) setCaretTextOffset(line, offset);
+  updateToolbar();
+  queueSave();
 }
 
 /* ----- link popover ----- */
 
-// the <a> the caret or selection currently sits inside, if any
-function enclosingLink() {
+// the element matching `selector` that the caret or selection sits inside, if any
+function enclosingEl(selector) {
   const sel = getSelection();
   if (!sel.rangeCount) return null;
   let node = sel.getRangeAt(0).commonAncestorContainer;
   if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
-  const a = node?.closest('a');
-  return a && editor.contains(a) ? a : null;
+  const match = node?.closest(selector);
+  return match && editor.contains(match) ? match : null;
+}
+
+function enclosingLink() {
+  return enclosingEl('a');
 }
 
 function openLinkPop(existing) {
@@ -204,7 +325,8 @@ function applyLink() {
 
 const ALLOWED = {
   A: ['href'], B: [], STRONG: [], I: [], EM: [], U: [],
-  DIV: [], P: [], BR: [], UL: [], OL: [], LI: [], SPAN: [],
+  DIV: [], P: [], BR: [], UL: ['class'], OL: [], LI: [], SPAN: [],
+  INPUT: ['type', 'checked'], // checklist boxes only — anything else is removed below
 };
 
 function sanitize(html) {
@@ -228,6 +350,13 @@ function sanitize(html) {
     if (node.tagName === 'A' && !/^(https?:|mailto:)/i.test(node.getAttribute('href') ?? '')) {
       node.removeAttribute('href');
     }
+    if (node.tagName === 'UL' && node.getAttribute('class') !== 'checklist') {
+      node.removeAttribute('class');
+    }
+  }
+  // inputs may only ever be checklist boxes
+  for (const input of tpl.content.querySelectorAll('input')) {
+    if (input.getAttribute('type') !== 'checkbox') input.remove();
   }
   return tpl.innerHTML;
 }
@@ -253,11 +382,11 @@ function bodyToEditor(entry) {
 }
 
 function updateEmptyHint() {
-  editor.classList.toggle('is-empty', !editor.textContent.trim() && !editor.querySelector('a'));
+  editor.classList.toggle('is-empty', !editor.textContent.trim() && !editor.querySelector('a, input'));
 }
 
 function isBlankOpenEntry() {
-  return !titleInput.value.trim() && !editor.textContent.trim() && !editor.querySelector('a');
+  return !titleInput.value.trim() && !editor.textContent.trim() && !editor.querySelector('a, input');
 }
 
 /* ----- saving ----- */
@@ -293,7 +422,8 @@ function closeEntry() {
   saveOpenEntry();
   // a never-touched entry shouldn't linger as an empty "Untitled"
   const entry = journal.find((e) => e.id === openId);
-  if (entry && !entry.title.trim() && !stripHtml(entry.body).trim() && !entry.body.includes('<a ')) {
+  if (entry && !entry.title.trim() && !stripHtml(entry.body).trim()
+      && !entry.body.includes('<a ') && !entry.body.includes('<input')) {
     deleteJournalEntry(entry.id);
   }
   openId = null;

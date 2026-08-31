@@ -869,6 +869,44 @@ h2 > .inline-edit, .inline-edit.title-edit {
   margin: 4px 0;
 }
 
+/* checklists in an entry */
+
+.journal-body ul.checklist {
+  list-style: none;
+  padding-left: 4px;
+}
+
+.journal-body ul.checklist li { padding: 1.5px 0; }
+
+.journal-body ul.checklist input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  border: 1.5px solid var(--grey);
+  border-radius: 5px;
+  background: transparent;
+  vertical-align: -2.5px;
+  margin-right: 9px;
+  cursor: pointer;
+  transition: border-color 180ms ease-out, background-color 180ms ease-out;
+}
+.journal-body ul.checklist input[type="checkbox"]:hover { border-color: var(--matcha); }
+.journal-body ul.checklist input[type="checkbox"]:checked {
+  background-color: var(--matcha);
+  border-color: var(--matcha);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FAF6EC' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E");
+  background-size: 9px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.journal-body ul.checklist li:has(> input:checked) {
+  color: var(--ink-soft);
+  text-decoration: line-through;
+  text-decoration-color: var(--grey);
+}
+
 /* ----- notes ------------------------------------------------------------- */
 
 .notes {
